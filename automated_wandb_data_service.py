@@ -6,9 +6,61 @@ from datetime import datetime, timedelta, timezone
 import json
 from huggingface_hub import HfApi
 import time
+import pandas as pd
 import csv
 
 load_dotenv()
+
+
+def get_latest_file(folder_path):
+    date_format = "%Y_%m_%d"
+    
+    files = os.listdir(folder_path)
+    
+    latest_file = None
+    latest_date = None
+    
+    for file in files:
+        if file.startswith("Metric_TSP_V2_") and file.endswith(".tsv"):
+            try:
+                date_str = file.split('_')[3] + '_' + file.split('_')[4] + '_' + file.split('_')[5].split('.')[0]
+                file_date = datetime.strptime(date_str, date_format)
+                
+                if latest_date is None or file_date > latest_date:
+                    latest_date = file_date
+                    latest_file = file
+            
+            except ValueError:
+                print(f"Skipping file due to date parsing error: {file}")
+
+    if latest_file:
+        return os.path.join(folder_path, latest_file)
+    else:
+        return None
+
+def get_latest_date_from_file(folder_path):
+    latest_file_path = get_latest_file(folder_path)
+    
+    if latest_file_path:
+        df = pd.read_csv(latest_file_path, sep='\t')
+        
+        if 'created_at' not in df.columns:
+            raise ValueError("The 'created_at' column is not present in the file.")
+        
+        df['created_at'] = pd.to_datetime(df['created_at'])
+        
+        latest_date = df['created_at'].max()
+        
+        return latest_date
+    else:
+        raise FileNotFoundError("No valid files found in the folder.")
+
+folder_path = 'past_data'
+try:
+    last_update = get_latest_date_from_file(folder_path)
+    print(f"The latest date in 'created_at' column is: {last_update}")
+except Exception as e:
+    print(e)
 
 # Define local directory
 parent = Path(__file__).resolve().parent
@@ -21,8 +73,7 @@ else:
     print(f"Folder already exists: {LOCAL_DIR}")
 
 # Define global variables
-SCRAPE_INTERVAL = 60 * 30 # 30 min
-last_update = None # represents the most recent update
+SCRAPE_INTERVAL = 60 * 10 # 10 min
 # last_update = datetime.fromisoformat("2024-09-15T23:45:42Z".replace('Z', '+00:00'))
 HUGGINGFACE_REPO = os.getenv("HF_REPO")
 REPO_TYPE = "dataset"
