@@ -130,31 +130,41 @@ def extract_run_info(run):
     selected_ids = config['selected_ids']
     dataset_ref = config['dataset_ref']
     time_elapsed = config['time_elapsed']
-    try: # adding in logic to now process selected_uids as well...
-        selected_uids = config['selected_uids']
-    except KeyError:
-        pass
     history = run.history()
     for column in history.columns:
         if column.startswith('distance'):
             distance_data = [round(float(distance), 5) for distance in history[column].tolist()]
         if column.startswith('rewards'):
             reward_data = [round(float(reward), 5) for reward in history[column].tolist()]
-
-    return {
-        'run_id': run_id,
-        'validator': validator,
-        'n_nodes': n_nodes,
-        'created_at': created_at,
-        'run_id': run_id,
-        'selected_ids': selected_ids,
-        'dataset_ref': dataset_ref,
-        'time_elapsed': time_elapsed,
-        'distances': distance_data,
-        'rewards': reward_data,
-        'selected_uids': selected_uids
-    }
-
+    try: # adding in logic to now process selected_uids as well...
+        selected_uids = config['selected_uids']
+        return {
+            'run_id': run_id,
+            'validator': validator,
+            'n_nodes': n_nodes,
+            'created_at': created_at,
+            'run_id': run_id,
+            'selected_ids': selected_ids,
+            'dataset_ref': dataset_ref,
+            'time_elapsed': time_elapsed,
+            'distances': distance_data,
+            'rewards': reward_data,
+            'selected_uids': selected_uids
+        }
+    except KeyError:
+        return {
+            'run_id': run_id,
+            'validator': validator,
+            'n_nodes': n_nodes,
+            'created_at': created_at,
+            'run_id': run_id,
+            'selected_ids': selected_ids,
+            'dataset_ref': dataset_ref,
+            'time_elapsed': time_elapsed,
+            'distances': distance_data,
+            'rewards': reward_data,
+        }
+    
 def get_file_path(date_string):
     '''
     returns the expected file name given a date_string and checks if it exists
@@ -251,7 +261,6 @@ def append_row_to_tsv(file_path: Path, row_dicts: list) -> None:
         
                 # Write the new row
                 writer.writerow(row_dict)
-    
 
 def write_files(run_rows: list) -> None:
     file_row_dict = {}
