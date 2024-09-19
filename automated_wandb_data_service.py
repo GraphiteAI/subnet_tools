@@ -286,6 +286,7 @@ def upload_file(file_path, hf_api):
     )
 
 def scrape_service():
+    global last_update
     hf_api_client = HfApi(token=os.getenv("HF_TOKEN"))
     # load in the wandb api
     wandb_key = os.getenv("WANDB_API_KEY")
@@ -309,7 +310,7 @@ def scrape_service():
             print(f"appended run_id: {run._attrs['name']} created at {run._attrs['createdAt']}")
             if i % 100 == 0:
                 print(f"Scraped {i} runs out of {len(runs)}")
-            time.sleep(5)
+            time.sleep(1)
         else:
             time.sleep(1)
         if i > 4000:
