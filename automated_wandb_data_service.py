@@ -110,7 +110,7 @@ def new_run(run):
     '''
     created_date = process_date_string(run._attrs["createdAt"])
     if last_update != None:
-        if created_date < last_update:
+        if created_date <= last_update:
             return False
         else:
             return True
