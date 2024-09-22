@@ -136,34 +136,20 @@ def extract_run_info(run):
             distance_data = [round(float(distance), 5) for distance in history[column].tolist()]
         if column.startswith('rewards'):
             reward_data = [round(float(reward), 5) for reward in history[column].tolist()]
-    try: # adding in logic to now process selected_uids as well...
-        selected_uids = config['selected_uids']
-        return {
-            'run_id': run_id,
-            'validator': validator,
-            'n_nodes': n_nodes,
-            'created_at': created_at,
-            'run_id': run_id,
-            'selected_ids': selected_ids,
-            'dataset_ref': dataset_ref,
-            'time_elapsed': time_elapsed,
-            'distances': distance_data,
-            'rewards': reward_data,
-            'selected_uids': selected_uids
-        }
-    except KeyError:
-        return {
-            'run_id': run_id,
-            'validator': validator,
-            'n_nodes': n_nodes,
-            'created_at': created_at,
-            'run_id': run_id,
-            'selected_ids': selected_ids,
-            'dataset_ref': dataset_ref,
-            'time_elapsed': time_elapsed,
-            'distances': distance_data,
-            'rewards': reward_data,
-        }
+    selected_uids = config.get('selected_uids',None)
+    return {
+        'run_id': run_id,
+        'validator': validator,
+        'n_nodes': n_nodes,
+        'created_at': created_at,
+        'run_id': run_id,
+        'selected_ids': selected_ids,
+        'dataset_ref': dataset_ref,
+        'time_elapsed': time_elapsed,
+        'distances': distance_data,
+        'rewards': reward_data,
+        'selected_uids': selected_uids
+    }
     
 def get_file_path(date_string):
     '''
@@ -204,63 +190,19 @@ def append_row_to_tsv(file_path: Path, row_dicts: list) -> None:
 
     # Read existing data if the file exists
     existing_data = pd.DataFrame()
-    if file_exists:
-        existing_data = pd.read_csv(file_path, sep='\t')
+    # Open the file in append mode
+    with file_path.open('a', newline='') as file:
+        # Create a CSV writer object with tab delimiter
+        for row_dict in row_dicts:
+            writer = csv.DictWriter(file, fieldnames=row_dict.keys(), delimiter='\t')
 
-        # Determine the current header and check for the new column
-        current_columns = existing_data.columns.tolist()
-        additional_column = 'selected_uids'  # Change this to your actual new column name
-
-        # Check if the new column is in the current columns
-        if additional_column not in current_columns:
-            # Add the new column with NA values
-            existing_data[additional_column] = pd.NA
-            
-            # Write the updated DataFrame back to the TSV file
-            existing_data.to_csv(file_path, sep='\t', index=False)
-
-            # Open the file in append mode
-            with file_path.open('a', newline='') as file:
-                # Create a CSV writer object with tab delimiter
-                writer = csv.DictWriter(file, fieldnames=current_columns + [additional_column], delimiter='\t')
-
-                # Write header if the file is empty
-                if not file_exists or file_path.stat().st_size == 0:
-                    writer.writeheader()
-
-                # Write the new rows
-                for row_dict in row_dicts:
-                    # Ensure the new column is included in the row_dict
-                    row_dict[additional_column] = row_dict.get(additional_column, pd.NA)
-                    writer.writerow(row_dict)
-        else:
-            # Open the file in append mode
-            with file_path.open('a', newline='') as file:
-                # Create a CSV writer object with tab delimiter
-                for row_dict in row_dicts:
-                    writer = csv.DictWriter(file, fieldnames=row_dict.keys(), delimiter='\t')
-
-                    # Write header if the file doesn't exist or is empty
-                    if not file_exists or file_path.stat().st_size == 0:
-                        writer.writeheader()
-                        file_exists = True
-            
-                    # Write the new row
-                    writer.writerow(row_dict)
-    else:
-        # Open the file in append mode
-        with file_path.open('a', newline='') as file:
-            # Create a CSV writer object with tab delimiter
-            for row_dict in row_dicts:
-                writer = csv.DictWriter(file, fieldnames=row_dict.keys(), delimiter='\t')
-
-                # Write header if the file doesn't exist or is empty
-                if not file_exists or file_path.stat().st_size == 0:
-                    writer.writeheader()
-                    file_exists = True
-        
-                # Write the new row
-                writer.writerow(row_dict)
+            # Write header if the file doesn't exist or is empty
+            if not file_exists or file_path.stat().st_size == 0:
+                writer.writeheader()
+                file_exists = True
+    
+            # Write the new row
+            writer.writerow(row_dict)
 
 def write_files(run_rows: list) -> None:
     file_row_dict = {}
