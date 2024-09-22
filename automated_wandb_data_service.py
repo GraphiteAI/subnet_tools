@@ -73,8 +73,8 @@ else:
     print(f"Folder already exists: {LOCAL_DIR}")
 
 # Define global variables
-SCRAPE_INTERVAL = 60 * 10 # 10 min
-# last_update = datetime.fromisoformat("2024-09-15T23:45:42Z".replace('Z', '+00:00'))
+SCRAPE_INTERVAL = 60 * 60 * 3 # 3 hours
+# last_update = datetime.fromisoformat("2024-09-18T00:00:00Z".replace('Z', '+00:00'))
 HUGGINGFACE_REPO = os.getenv("HF_REPO")
 REPO_TYPE = "dataset"
 PREFIX = "Metric_TSP_V2"
