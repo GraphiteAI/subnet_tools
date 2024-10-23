@@ -137,6 +137,9 @@ def extract_run_info(run):
         if column.startswith('rewards'):
             reward_data = [round(float(reward), 5) for reward in history[column].tolist()]
     selected_uids = config.get('selected_uids',None)
+    problem_type = config['problem_type']
+    n_salesmen = config.get('n_salesmen', None)
+    depots = config.get("depots", None)
     return {
         'run_id': run_id,
         'validator': validator,
@@ -148,7 +151,10 @@ def extract_run_info(run):
         'time_elapsed': time_elapsed,
         'distances': distance_data,
         'rewards': reward_data,
-        'selected_uids': selected_uids
+        'selected_uids': selected_uids,
+        'problem_type': problem_type,
+        'n_salesmen': n_salesmen,
+        'depots': depots
     }
     
 def get_file_path(date_string):
@@ -181,28 +187,82 @@ def get_file_path(date_string):
 #             # Write the new row
 #             writer.writerow(row_dict)
 
+# def append_row_to_tsv(file_path: Path, row_dicts: list) -> None:
+#     # Ensure the file path is a Path object
+#     file_path = Path(file_path)
+
+#     # Check if the file exists
+#     file_exists = file_path.exists()
+
+#     # # Read existing data if the file exists
+#     # existing_data = pd.DataFrame()
+#     # Open the file in append mode
+#     with file_path.open('a', newline='') as file:
+#         # Create a CSV writer object with tab delimiter
+#         for row_dict in row_dicts:
+#             writer = csv.DictWriter(file, fieldnames=row_dict.keys(), delimiter='\t')
+
+#             # Write header if the file doesn't exist or is empty
+#             if not file_exists or file_path.stat().st_size == 0:
+#                 writer.writeheader()
+#                 file_exists = True
+    
+#             # Write the new row
+#             writer.writerow(row_dict)
+
 def append_row_to_tsv(file_path: Path, row_dicts: list) -> None:
     # Ensure the file path is a Path object
     file_path = Path(file_path)
 
-    # Check if the file exists
-    file_exists = file_path.exists()
+    try:
+        # Check if the file exists
+        file_exists = file_path.exists()
+        existing_data = []
+        existing_headers = []
 
-    # Read existing data if the file exists
-    existing_data = pd.DataFrame()
-    # Open the file in append mode
-    with file_path.open('a', newline='') as file:
-        # Create a CSV writer object with tab delimiter
-        for row_dict in row_dicts:
-            writer = csv.DictWriter(file, fieldnames=row_dict.keys(), delimiter='\t')
+        if file_exists:
+            # Read existing data and headers
+            with file_path.open('r', newline='') as file:
+                reader = csv.DictReader(file, delimiter='\t')
+                existing_headers = reader.fieldnames
+                existing_data = [row for row in reader]
 
-            # Write header if the file doesn't exist or is empty
-            if not file_exists or file_path.stat().st_size == 0:
+        # Get the new fieldnames from the first row_dict
+        new_fieldnames = row_dicts[0].keys() if row_dicts else []
+
+        # Check if headers match
+        if existing_headers != list(new_fieldnames):
+            # Rewrite the whole CSV file with new headers
+            with file_path.open('w', newline='') as file:
+                writer = csv.DictWriter(file, fieldnames=new_fieldnames, delimiter='\t')
                 writer.writeheader()
-                file_exists = True
-    
-            # Write the new row
-            writer.writerow(row_dict)
+                
+                # Write existing rows, filling missing fields with None
+                for row in existing_data:
+                    new_row = {key: row.get(key, None) for key in new_fieldnames}
+                    writer.writerow(new_row)
+
+                # Write new rows
+                for row_dict in row_dicts:
+                    new_row = {key: row_dict.get(key, None) for key in new_fieldnames}
+                    writer.writerow(new_row)
+
+        else:
+            # Append new rows if headers match
+            with file_path.open('a', newline='') as file:
+                writer = csv.DictWriter(file, fieldnames=existing_headers, delimiter='\t')
+
+                # Write new rows
+                for row_dict in row_dicts:
+                    new_row = {key: row_dict.get(key, None) for key in existing_headers}
+                    writer.writerow(new_row)
+
+    except FileNotFoundError:
+        print(f"Error: The file {file_path} was not found.")
+    except PermissionError:
+        print(f"Error: Permission denied when accessing {file_path}.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 def write_files(run_rows: list) -> None:
     file_row_dict = {}
