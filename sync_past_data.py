@@ -9,9 +9,12 @@ load_dotenv()
 def main():
     # downloads all files
     HF_REPO = os.getenv("HF_REPO")
+    LOCAL_DIR = Path(os.getenv("LOCAL_DIR"))
+    # check if
+    if LOCAL_DIR is None:
+        parent = Path(__file__).resolve().parent
+        LOCAL_DIR = parent / 'past_data'
     # check that local_dir exists
-    parent = Path(__file__).resolve().parent
-    LOCAL_DIR = parent / 'past_data'
     if not LOCAL_DIR.exists():
         LOCAL_DIR.mkdir(parents=True, exist_ok=True)
         print(f"Created folder: {LOCAL_DIR}")
