@@ -121,45 +121,48 @@ def extract_run_info(run):
     '''
     Constructs json object
     '''
-    run_id = run._attrs['name']
-    config = run._attrs['config']
-    validator = json.loads(run._attrs['description'])['validator']
-    n_nodes = config['n_nodes']
-    created_at = run._attrs['createdAt']
-    run_id = run._attrs['name']
-    selected_ids = config['selected_ids']
-    dataset_ref = config['dataset_ref']
     try:
+        run_id = run._attrs['name']
+        config = run._attrs['config']
+        validator = json.loads(run._attrs['description'])['validator']
+        n_nodes = config['n_nodes']
+        created_at = run._attrs['createdAt']
+        run_id = run._attrs['name']
+        selected_ids = config['selected_ids']
+        dataset_ref = config['dataset_ref']
         time_elapsed = config['time_elapsed']
-    except KeyError:
-        time_elapsed = None
-        print(f"Time elapsed not found for run_id: {run_id}")
-    history = run.history()
-    for column in history.columns:
-        if column.startswith('distance'):
-            distance_data = [round(float(distance), 5) for distance in history[column].tolist()]
-        if column.startswith('rewards'):
-            reward_data = [round(float(reward), 5) for reward in history[column].tolist()]
-    selected_uids = config.get('selected_uids',None)
-    problem_type = config['problem_type']
-    n_salesmen = config.get('n_salesmen', None)
-    depots = config.get("depots", None)
-    return {
-        'run_id': run_id,
-        'validator': validator,
-        'n_nodes': n_nodes,
-        'created_at': created_at,
-        'run_id': run_id,
-        'selected_ids': selected_ids,
-        'dataset_ref': dataset_ref,
-        'time_elapsed': time_elapsed,
-        'distances': distance_data,
-        'rewards': reward_data,
-        'selected_uids': selected_uids,
-        'problem_type': problem_type,
-        'n_salesmen': n_salesmen,
-        'depots': depots
-    }
+        history = run.history()
+        for column in history.columns:
+            if column.startswith('distance'):
+                distance_data = [round(float(distance), 5) for distance in history[column].tolist()]
+            if column.startswith('rewards'):
+                reward_data = [round(float(reward), 5) for reward in history[column].tolist()]
+        selected_uids = config.get('selected_uids',None)
+        problem_type = config['problem_type']
+        n_salesmen = config.get('n_salesmen', None)
+        depots = config.get("depots", None)
+        return {
+            'run_id': run_id,
+            'validator': validator,
+            'n_nodes': n_nodes,
+            'created_at': created_at,
+            'run_id': run_id,
+            'selected_ids': selected_ids,
+            'dataset_ref': dataset_ref,
+            'time_elapsed': time_elapsed,
+            'distances': distance_data,
+            'rewards': reward_data,
+            'selected_uids': selected_uids,
+            'problem_type': problem_type,
+            'n_salesmen': n_salesmen,
+            'depots': depots
+        }
+    except KeyError as e:
+        print(f"Error: {e} in {run._attrs['name']}")
+        return None
+    except UnboundLocalError as e:
+        print(f"Error: {e} in {run._attrs['name']}")
+        return None
     
 def get_file_path(date_string):
     '''
@@ -311,12 +314,17 @@ def scrape_service():
     i = 1
     while True:
         if new_run(run):
-            run_rows.append(extract_run_info(run))
-            last_update = process_date_string(run._attrs['createdAt']) # update global reference
-            print(f"appended run_id: {run._attrs['name']} created at {run._attrs['createdAt']}")
-            if i % 100 == 0:
-                print(f"Scraped {i} runs out of {len(runs)}")
-            time.sleep(1)
+            run_row = extract_run_info(run)
+            if run_row:
+                run_rows.append(run_row)
+                run_rows.append()
+                last_update = process_date_string(run._attrs['createdAt']) # update global reference
+                print(f"appended run_id: {run._attrs['name']} created at {run._attrs['createdAt']}")
+                if i % 100 == 0:
+                    print(f"Scraped {i} runs out of {len(runs)}")
+                time.sleep(1)
+            else:
+                print(f"skipping run due to missing data")
         else:
             time.sleep(1)
         if i > 4000:
