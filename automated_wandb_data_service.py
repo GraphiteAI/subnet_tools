@@ -129,7 +129,11 @@ def extract_run_info(run):
     run_id = run._attrs['name']
     selected_ids = config['selected_ids']
     dataset_ref = config['dataset_ref']
-    time_elapsed = config['time_elapsed']
+    try:
+        time_elapsed = config['time_elapsed']
+    except KeyError:
+        time_elapsed = None
+        print(f"Time elapsed not found for run_id: {run_id}")
     history = run.history()
     for column in history.columns:
         if column.startswith('distance'):
