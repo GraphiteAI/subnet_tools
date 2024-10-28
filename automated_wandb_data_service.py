@@ -317,7 +317,6 @@ def scrape_service():
             run_row = extract_run_info(run)
             if run_row:
                 run_rows.append(run_row)
-                run_rows.append()
                 last_update = process_date_string(run._attrs['createdAt']) # update global reference
                 print(f"appended run_id: {run._attrs['name']} created at {run._attrs['createdAt']}")
                 if i % 100 == 0:
