@@ -92,8 +92,8 @@ class SimulatedValidator:
             return "Only Geom, Euclidean2D, and Manhatten2D supported for now."
     
     def register_mock_miner(self, miner:MockMiner):
-        self.miners = [] # clear out previous state
-        self.miners.append(miner)
+        if miner not in self.miners:
+            self.miners.append(miner)
 
     def get_recreation_time(self, synapse:GraphV2Synapse):
         start_time = time.time()
