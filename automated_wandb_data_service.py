@@ -141,6 +141,7 @@ def extract_run_info(run):
         problem_type = config['problem_type']
         n_salesmen = config.get('n_salesmen', None)
         depots = config.get("depots", None)
+        best_solution = config.get("best_solution", None)
         return {
             'run_id': run_id,
             'validator': validator,
@@ -155,7 +156,8 @@ def extract_run_info(run):
             'selected_uids': selected_uids,
             'problem_type': problem_type,
             'n_salesmen': n_salesmen,
-            'depots': depots
+            'depots': depots,
+            'best_solution': best_solution
         }
     except KeyError as e:
         print(f"Error: {e} in {run._attrs['name']}")
