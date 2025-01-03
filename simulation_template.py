@@ -4,7 +4,7 @@ from sim_utils.data_fetcher import get_random_sample, load_from_past_dataset
 from sim_utils.mock_protocol import GraphV2Synapse, GraphV2Problem, GraphV2ProblemMulti
 from sim_utils.utils import get_multi_minmax_tour_distance, get_tour_distance
 from sim_utils.template_mock_solver import MockMTSPSolver, MockTSPSolver
-from sync_past_data import main as sync_data
+from sync_past_data import sync_data_recent as sync_data
 
 from typing import Union
 from abc import abstractmethod

@@ -1,6 +1,6 @@
 import pandas as pd
 from datetime import datetime
-from sync_past_data import main as sync_data
+from sync_past_data import sync_data_recent as sync_data
 import os
 from pathlib import Path
 import json
